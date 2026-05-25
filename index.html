@@ -56,9 +56,14 @@
       cursor: pointer;
       box-shadow: 0 0 0 3px #c7d2fe;
     }
-    .badge-einsteiger   { background: #d1fae5; color: #065f46; }
+    .badge-einsteiger      { background: #d1fae5; color: #065f46; }
     .badge-grundkenntnisse { background: #fef3c7; color: #92400e; }
     .badge-fortgeschritten { background: #ede9fe; color: #5b21b6; }
+
+    /* ═══ NEU: Compliance-Badge-Styles ═══ */
+    .badge-certified    { background: #d1fae5; color: #065f46; }
+    .badge-in-progress  { background: #fef3c7; color: #92400e; }
+    .badge-pending      { background: #fee2e2; color: #991b1b; }
 
     @media print {
       .no-print { display: none !important; }
@@ -192,23 +197,44 @@
             </select>
           </div>
 
+          <!-- ═══ NEU: Multi-Rollen-Auswahl ═══ -->
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-3">Für welche Rolle planen Sie die Schulung?</label>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">Für welche Rollen planen Sie die Schulung? <span class="text-slate-400 font-normal">(Mehrfachauswahl)</span></label>
+            <p class="text-xs text-slate-400 mb-3">Pro Rolle Mitarbeiterzahl angeben – wird für Pricing verwendet.</p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <template x-for="r in rollen" :key="r">
-                <button
-                  @click="rolle = r"
-                  class="px-4 py-4 rounded-xl border-2 text-sm font-medium transition-all duration-150 text-left"
-                  :class="rolle === r
+                <div
+                  @click="toggleRolle(r)"
+                  class="rounded-xl border-2 text-sm font-medium transition-all duration-150 text-left cursor-pointer select-none"
+                  :class="isRolleSelected(r)
                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                     : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50'"
                 >
-                  <div class="text-2xl mb-1" x-text="rollenIcons[r]"></div>
-                  <div x-text="r"></div>
-                </button>
+                  <div class="px-4 pt-4 pb-3">
+                    <div class="flex items-center justify-between mb-1">
+                      <div class="text-2xl" x-text="rollenIcons[r]"></div>
+                      <div x-show="isRolleSelected(r)" class="text-indigo-500 font-bold">✓</div>
+                    </div>
+                    <div x-text="r" class="font-medium"></div>
+                  </div>
+
+                  <!-- Count input – click.stop prevents toggling when typing -->
+                  <div x-show="isRolleSelected(r)" @click.stop class="px-4 pb-4 border-t border-indigo-100 pt-3">
+                    <label class="block text-xs text-indigo-500 font-medium mb-1">Mitarbeitende</label>
+                    <input
+                      type="number" min="1" max="9999"
+                      :value="getRolleCount(r)"
+                      @input="updateRolleCount(r, $event.target.value)"
+                      @click.stop
+                      class="w-full border border-indigo-200 rounded-lg px-2 py-1.5 text-sm text-indigo-700 text-center focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
+                    >
+                  </div>
+                </div>
               </template>
             </div>
           </div>
+          <!-- ═══ Ende Multi-Rollen ═══ -->
+
         </div>
 
         <!-- STEP 2: KI-Level -->
@@ -303,7 +329,7 @@
 
     <!-- Results header -->
     <div class="gradient-hero px-6 pt-8 pb-16">
-      <div class="max-w-4xl mx-auto">
+      <div class="max-w-5xl mx-auto">
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-2">
             <div class="w-7 h-7 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
@@ -323,7 +349,10 @@
 
         <div class="text-indigo-300 text-sm uppercase tracking-widest font-semibold mb-2">Ihr persönlicher Lernpfad</div>
         <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-4">
-          <span x-text="lernpfad.length"></span> Module · <span x-text="gesamtDauer"></span>
+          <!-- ═══ NEU: zeigt Anzahl Lernpfade statt Module ═══ -->
+          <span x-text="lernpfade.length + (lernpfade.length === 1 ? ' Lernpfad' : ' Lernpfade')"></span>
+          · <span x-text="totalModule"></span> Module
+          · <span x-text="gesamtDauer"></span>
         </h1>
 
         <!-- Profile summary chips -->
@@ -331,9 +360,14 @@
           <span class="bg-white bg-opacity-20 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1">
             🏢 <span x-text="branche"></span>
           </span>
-          <span class="bg-white bg-opacity-20 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1">
-            👤 <span x-text="rolle"></span>
-          </span>
+          <!-- ═══ NEU: eine Chip pro ausgewählter Rolle ═══ -->
+          <template x-for="sr in selectedRollen" :key="sr.name">
+            <span class="bg-white bg-opacity-20 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1">
+              <span x-text="rollenIcons[sr.name]"></span>
+              <span x-text="sr.name"></span>
+              <span class="opacity-60 text-xs">(<span x-text="sr.count"></span>)</span>
+            </span>
+          </template>
           <span class="bg-white bg-opacity-20 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1">
             📊 <span x-text="levelLabels[level]"></span>
           </span>
@@ -348,62 +382,71 @@
     </div>
 
     <!-- Main content -->
-    <div class="px-6 -mt-8 pb-16 max-w-4xl mx-auto">
+    <div class="px-6 -mt-8 pb-16 max-w-5xl mx-auto">
 
-      <!-- Timeline cards -->
-      <div class="space-y-4">
-        <template x-for="(modul, idx) in lernpfad" :key="modul.id">
-          <div class="flex gap-4">
-
-            <!-- Timeline spine -->
-            <div class="flex flex-col items-center flex-shrink-0 pt-1">
-              <div class="w-10 h-10 gradient-card rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-200 flex-shrink-0">
-                <span x-text="idx + 1"></span>
+      <!-- ═══ NEU: Multi-Rollen-Grid – ein Lernpfad pro Rolle ═══ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <template x-for="(pfad, pidx) in lernpfade" :key="pfad.rolle">
+          <div>
+            <!-- Path header -->
+            <div class="flex items-center justify-between mb-4 px-1">
+              <div>
+                <span class="text-base font-bold text-slate-800" x-text="pfad.rolle + '-Team'"></span>
+                <span class="text-slate-400 text-sm ml-1.5">· <span x-text="pfad.count"></span> Mitarbeitende</span>
               </div>
-              <div x-show="idx < lernpfad.length - 1" class="timeline-line flex-1 mt-1 opacity-30 rounded-full"></div>
+              <span class="text-xs font-semibold text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-full" x-text="pfadDauer(pfad.modules)"></span>
             </div>
 
-            <!-- Card -->
-            <div
-              class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-2 card-hover cursor-pointer"
-              @click="openModul(modul)"
-            >
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex items-start gap-4 flex-1">
-                  <div class="text-3xl flex-shrink-0 mt-0.5" x-text="modul.icon"></div>
-                  <div class="flex-1">
-                    <div class="flex flex-wrap items-center gap-2 mb-1">
-                      <h3 class="font-bold text-slate-800 text-base" x-text="modul.name"></h3>
-                      <span
-                        class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        :class="{
-                          'badge-einsteiger': modul.level === 'Einsteiger',
-                          'badge-grundkenntnisse': modul.level === 'Grundkenntnisse',
-                          'badge-fortgeschritten': modul.level === 'Fortgeschritten'
-                        }"
-                        x-text="modul.level"
-                      ></span>
+            <!-- Timeline cards -->
+            <div class="space-y-3">
+              <template x-for="(modul, idx) in pfad.modules" :key="modul.id">
+                <div class="flex gap-3">
+
+                  <!-- Timeline spine -->
+                  <div class="flex flex-col items-center flex-shrink-0 pt-1">
+                    <div class="w-8 h-8 gradient-card rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md flex-shrink-0">
+                      <span x-text="idx + 1"></span>
                     </div>
-                    <p class="text-slate-500 text-sm line-clamp-2" x-text="modul.beschreibung"></p>
-                    <div class="flex items-center gap-4 mt-3">
-                      <span class="text-xs text-slate-400 flex items-center gap-1">
-                        ⏱ <span x-text="modul.dauer"></span>
-                      </span>
-                      <span class="text-xs text-slate-400 flex items-center gap-1">
-                        📋 <span x-text="modul.format"></span>
-                      </span>
-                      <span class="text-xs font-semibold text-indigo-500 ml-auto">
-                        Woche <span x-text="idx + 1"></span>
-                      </span>
+                    <div x-show="idx < pfad.modules.length - 1" class="timeline-line flex-1 mt-1 opacity-30 rounded-full"></div>
+                  </div>
+
+                  <!-- Card -->
+                  <div
+                    class="flex-1 bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-1 card-hover cursor-pointer"
+                    @click="openModul(modul)"
+                  >
+                    <div class="flex items-start gap-3">
+                      <div class="text-2xl flex-shrink-0 mt-0.5" x-text="modul.icon"></div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+                          <h3 class="font-bold text-slate-800 text-sm" x-text="modul.name"></h3>
+                          <span
+                            class="text-xs font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                            :class="{
+                              'badge-einsteiger': modul.level === 'Einsteiger',
+                              'badge-grundkenntnisse': modul.level === 'Grundkenntnisse',
+                              'badge-fortgeschritten': modul.level === 'Fortgeschritten'
+                            }"
+                            x-text="modul.level"
+                          ></span>
+                        </div>
+                        <p class="text-slate-500 text-xs line-clamp-2" x-text="modul.beschreibung"></p>
+                        <div class="flex items-center gap-3 mt-2">
+                          <span class="text-xs text-slate-400">⏱ <span x-text="modul.dauer"></span></span>
+                          <span class="text-xs text-slate-400">📋 <span x-text="modul.format"></span></span>
+                          <span class="text-xs font-semibold text-indigo-500 ml-auto">Wk <span x-text="idx + 1"></span></span>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
                 </div>
-                <div class="text-slate-300 text-lg flex-shrink-0">›</div>
-              </div>
+              </template>
             </div>
           </div>
         </template>
       </div>
+      <!-- ═══ Ende Multi-Rollen-Grid ═══ -->
 
       <!-- Why this plan -->
       <div class="mt-8 bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
@@ -417,16 +460,75 @@
         </div>
       </div>
 
+      <!-- ═══ NEU: Pricing-Kachel ═══ -->
+      <div class="mt-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="font-bold text-slate-800 text-base">Geschätzte Investition</h3>
+          <!-- Basis / Pro Toggle -->
+          <div class="inline-flex items-center bg-slate-100 rounded-xl p-1">
+            <button
+              @click="pricingPlan = 'basis'"
+              :class="pricingPlan === 'basis' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
+            >Basis 29 €</button>
+            <button
+              @click="pricingPlan = 'pro'"
+              :class="pricingPlan === 'pro' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150"
+            >Pro 49 €</button>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-slate-700">
+          <!-- Per-role breakdown -->
+          <template x-for="sr in selectedRollen" :key="sr.name">
+            <div class="flex justify-between items-center text-sm text-slate-500">
+              <span x-text="sr.name + ': ' + sr.count + ' × ' + (pricingPlan === 'basis' ? '29' : '49') + ' €'"></span>
+              <span class="font-medium text-slate-600" x-text="(sr.count * (pricingPlan === 'basis' ? 29 : 49)).toLocaleString('de-DE') + ' €'"></span>
+            </div>
+          </template>
+
+          <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline">
+            <span class="font-semibold text-slate-800">Monatlich</span>
+            <span class="font-extrabold text-indigo-600 text-2xl" x-text="monatlicheInvestition.toLocaleString('de-DE') + ' €'"></span>
+          </div>
+          <div class="flex justify-between items-center text-slate-500">
+            <span class="text-sm">Jährlich (ARR)</span>
+            <span class="text-sm font-semibold text-slate-700" x-text="(monatlicheInvestition * 12).toLocaleString('de-DE') + ' €'"></span>
+          </div>
+        </div>
+
+        <!-- Pro badge -->
+        <div
+          x-show="pricingPlan === 'pro'"
+          class="mt-4 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-indigo-700 font-medium"
+        >
+          <span class="text-base">✅</span>
+          Pro-Plan inkl. Compliance-Reporting, AI-Act-Nachweis & dediziertem Erfolgs-Dashboard
+        </div>
+      </div>
+      <!-- ═══ Ende Pricing-Kachel ═══ -->
+
       <!-- CTA -->
-      <div class="mt-6 flex flex-col sm:flex-row gap-3 no-print">
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">
         <button
           @click="neuerPlan()"
-          class="flex-1 border-2 border-indigo-200 text-indigo-600 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition-colors text-sm"
+          class="border-2 border-indigo-200 text-indigo-600 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition-colors text-sm"
         >
           ← Neuen Plan erstellen
         </button>
+        <!-- ═══ NEU: Compliance-Dashboard-Button ═══ -->
         <button
-          class="flex-1 gradient-card text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-indigo-100 hover:opacity-90 transition-opacity text-sm"
+          @click="screen = 'compliance'"
+          class="font-semibold px-6 py-3 rounded-xl text-sm transition-all duration-150"
+          :class="pricingPlan === 'pro'
+            ? 'gradient-card text-white shadow-lg shadow-indigo-200 hover:opacity-90'
+            : 'border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50'"
+        >
+          📊 Compliance-Dashboard
+        </button>
+        <button
+          class="gradient-card text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-indigo-100 hover:opacity-90 transition-opacity text-sm"
           @click="alert('In der Vollversion: Direkte Anfrage an unser Beratungsteam senden.')"
         >
           Schulung anfragen →
@@ -434,6 +536,173 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       NEU: SCREEN: COMPLIANCE-DASHBOARD
+  ═══════════════════════════════════════════════════════ -->
+  <div x-show="screen === 'compliance'" class="fade-in min-h-screen">
+
+    <!-- Header -->
+    <div class="gradient-hero px-6 pt-8 pb-16">
+      <div class="max-w-5xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+          <button @click="screen = 'results'" class="text-indigo-200 hover:text-white text-sm transition-colors flex items-center gap-1">
+            ← Zurück zu Lernpfaden
+          </button>
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+              <span class="text-white text-xs font-bold">S</span>
+            </div>
+            <span class="text-white font-semibold">SkillPath AI</span>
+          </div>
+          <button
+            @click="alert('Demo: PDF-Export wird in der Vollversion erstellt.')"
+            class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm px-4 py-2 rounded-xl transition-all font-medium no-print"
+          >
+            📄 AI-Act-Nachweis exportieren
+          </button>
+        </div>
+
+        <div class="text-indigo-300 text-sm uppercase tracking-widest font-semibold mb-2">EU AI Act · Artikel 4</div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2">AI Act Compliance Dashboard</h1>
+        <p class="text-indigo-200 text-sm">Echtzeit-Überblick über den AI-Literacy-Stand Ihrer Mitarbeitenden</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-6 -mt-8 pb-16 max-w-5xl mx-auto">
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+
+        <!-- KPI 1: AI-Literacy-Quote -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">AI-Literacy-Quote</p>
+          <p class="text-4xl font-extrabold text-slate-800 mb-4" x-text="literacyQuote + '%'"></p>
+          <!-- Animated bar: transitions width when screen becomes 'compliance' -->
+          <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-1000 ease-out"
+              style="background: linear-gradient(90deg, #4f46e5, #7c3aed);"
+              :style="screen === 'compliance' ? 'width: ' + literacyQuote + '%' : 'width: 0%'"
+            ></div>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Ziel laut AI Act Artikel 4: 100 % der Mitarbeitenden</p>
+        </div>
+
+        <!-- KPI 2: Aktive Lernpfade -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Aktive Lernpfade</p>
+          <p class="text-4xl font-extrabold text-slate-800 mb-1" x-text="lernpfade.length || '—'"></p>
+          <p class="text-sm text-slate-400 mb-4">
+            <span x-text="totalMitarbeitende"></span> Mitarbeitende gesamt
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <template x-for="pfad in lernpfade" :key="pfad.rolle">
+              <span class="bg-indigo-50 text-indigo-600 text-xs font-semibold px-2.5 py-1 rounded-full" x-text="pfad.rolle"></span>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Chips (visual state only) -->
+      <div class="flex gap-2 flex-wrap mb-4">
+        <template x-for="f in complianceFilters" :key="f.id">
+          <button
+            @click="complianceFilter = f.id"
+            class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150"
+            :class="complianceFilter === f.id
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'bg-white border border-slate-200 text-slate-600 hover:border-indigo-300'"
+            x-text="f.label"
+          ></button>
+        </template>
+      </div>
+
+      <!-- Employee Table -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-100">
+                <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Name</th>
+                <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Abteilung</th>
+                <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide hidden md:table-cell">Lernpfad</th>
+                <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Fortschritt</th>
+                <th class="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="(e, i) in employeesWithRoles" :key="e.name">
+                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors" :class="i % 2 === 0 ? '' : 'bg-slate-50/50'">
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-2.5">
+                      <div class="w-7 h-7 gradient-card rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                        x-text="e.name.charAt(0)"></div>
+                      <span class="font-medium text-slate-800 text-sm" x-text="e.name"></span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full" x-text="e.abteilung"></span>
+                  </td>
+                  <td class="px-5 py-3.5 hidden md:table-cell">
+                    <span class="text-slate-500 text-xs" x-text="e.pfadName"></span>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-2">
+                      <div class="w-20 h-1.5 bg-slate-100 rounded-full flex-shrink-0 overflow-hidden">
+                        <div
+                          class="h-full rounded-full transition-all duration-700"
+                          :class="e.progress === 100 ? 'bg-green-500' : e.progress > 30 ? 'bg-yellow-400' : 'bg-red-400'"
+                          :style="'width: ' + e.progress + '%'"
+                        ></div>
+                      </div>
+                      <span class="text-xs text-slate-500 tabular-nums" x-text="e.progress + '%'"></span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <span
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                      :class="{
+                        'badge-certified':    e.status === 'certified',
+                        'badge-in-progress':  e.status === 'in-progress',
+                        'badge-pending':      e.status === 'pending'
+                      }"
+                    >
+                      <span x-text="e.status === 'certified' ? '🟢' : e.status === 'in-progress' ? '🟡' : '🔴'"></span>
+                      <span x-text="e.status === 'certified' ? 'Zertifiziert' : e.status === 'in-progress' ? 'In Bearbeitung' : 'Ausstehend'"></span>
+                    </span>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-slate-400" x-text="employeesWithRoles.length + ' Mitarbeitende angezeigt'"></span>
+          <span class="text-xs text-slate-400">Stand: <span x-text="new Date().toLocaleDateString('de-DE')"></span></span>
+        </div>
+      </div>
+
+      <!-- Back CTA -->
+      <div class="mt-6 flex gap-3 no-print">
+        <button
+          @click="screen = 'results'"
+          class="border-2 border-indigo-200 text-indigo-600 font-semibold px-6 py-3 rounded-xl hover:bg-indigo-50 transition-colors text-sm"
+        >
+          ← Zurück zu Lernpfaden
+        </button>
+        <button
+          @click="alert('Demo: PDF-Export wird in der Vollversion erstellt.')"
+          class="gradient-card text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-indigo-100 hover:opacity-90 transition-opacity text-sm"
+        >
+          📄 AI-Act-Nachweis exportieren
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ═══ Ende Compliance-Screen ═══ -->
+
 
   <!-- ═══════════════════════════════════════════════════════
        MODAL: MODULE DETAIL
@@ -518,14 +787,18 @@
 
       // Wizard inputs
       branche: '',
-      rolle: '',
-      level: 0,
+      selectedRollen: [],   // ═══ NEU: [{name, count}] statt einzelner rolle-String
+      level: 1,             // Default Grundkenntnisse (schneller Pitch-Flow)
       ziele: [],
       freitext: '',
 
       // Results
-      lernpfad: [],
+      lernpfade: [],        // ═══ NEU: [{rolle, count, modules}] statt flachem lernpfad-Array
       selectedModul: null,
+
+      // ═══ NEU: Pricing & Compliance State ═══
+      pricingPlan: 'basis',
+      complianceFilter: 'alle',
 
       // Labels & copy
       stepTitles: [
@@ -553,13 +826,13 @@
 
       rollen: ['Management', 'Fachbereich', 'IT / Entwicklung'],
       rollenIcons: {
-        'Management':      '👔',
-        'Fachbereich':     '🧑‍💼',
+        'Management':       '👔',
+        'Fachbereich':      '🧑‍💼',
         'IT / Entwicklung': '💻',
       },
 
-      levelLabels: ['Einsteiger', 'Grundkenntnisse', 'Fortgeschritten'],
-      levelIcons:  ['🌱', '📚', '🚀'],
+      levelLabels:       ['Einsteiger', 'Grundkenntnisse', 'Fortgeschritten'],
+      levelIcons:        ['🌱', '📚', '🚀'],
       levelDescriptions: [
         'KI ist weitgehend unbekannt. Grundverständnis und erste praktische Erfahrungen werden benötigt.',
         'KI-Basics bekannt, aber wenig praktische Erfahrung. Vertiefung und konkrete Anwendung gewünscht.',
@@ -567,15 +840,39 @@
       ],
 
       zielOptionen: [
-        { id: 'effizienz',       label: 'Effizienz steigern',         icon: '⚡' },
-        { id: 'entscheidungen',  label: 'Bessere Entscheidungen',      icon: '🎯' },
-        { id: 'automatisierung', label: 'Prozesse automatisieren',     icon: '⚙️' },
-        { id: 'compliance',      label: 'KI-Compliance & Recht',       icon: '🔒' },
-        { id: 'innovation',      label: 'Innovation fördern',          icon: '💡' },
-        { id: 'kosten',          label: 'Kosten reduzieren',           icon: '💰' },
+        { id: 'effizienz',       label: 'Effizienz steigern',       icon: '⚡' },
+        { id: 'entscheidungen',  label: 'Bessere Entscheidungen',    icon: '🎯' },
+        { id: 'automatisierung', label: 'Prozesse automatisieren',   icon: '⚙️' },
+        { id: 'compliance',      label: 'KI-Compliance & Recht',     icon: '🔒' },
+        { id: 'innovation',      label: 'Innovation fördern',        icon: '💡' },
+        { id: 'kosten',          label: 'Kosten reduzieren',         icon: '💰' },
       ],
 
-      // Training modules
+      // ═══ NEU: Compliance-Filter-Optionen ═══
+      complianceFilters: [
+        { id: 'alle',        label: 'Alle' },
+        { id: 'certified',   label: '🟢 Zertifiziert' },
+        { id: 'in-progress', label: '🟡 In Bearbeitung' },
+        { id: 'pending',     label: '🔴 Ausstehend' },
+      ],
+
+      // ═══ NEU: Fake-Mitarbeitende für Compliance-Demo ═══
+      // 8 zertifiziert von 11 = 72.7% ≈ 73 %
+      employeeBaseData: [
+        { name: 'Anna Müller',      progress: 100, status: 'certified'   },
+        { name: 'Thomas Berger',    progress: 80,  status: 'in-progress' },
+        { name: 'Sarah Koch',       progress: 100, status: 'certified'   },
+        { name: 'Markus Weber',     progress: 45,  status: 'in-progress' },
+        { name: 'Julia Fischer',    progress: 100, status: 'certified'   },
+        { name: 'Stefan Hoffmann',  progress: 15,  status: 'pending'     },
+        { name: 'Laura Schmitt',    progress: 100, status: 'certified'   },
+        { name: 'Michael Braun',    progress: 100, status: 'certified'   },
+        { name: 'Sandra Meyer',     progress: 100, status: 'certified'   },
+        { name: 'Christian Wolf',   progress: 60,  status: 'in-progress' },
+        { name: 'Petra Schulz',     progress: 100, status: 'certified'   },
+      ],
+
+      // Training modules (unverändert)
       modules: [
         {
           id: 'ai-basics',
@@ -720,16 +1017,17 @@
       ],
 
       // ─── Computed ───────────────────────────────────────
+
       get canProceed() {
-        if (this.step === 1) return this.branche !== '' && this.rolle !== '';
+        if (this.step === 1) return this.branche !== '' && this.selectedRollen.length > 0;
         if (this.step === 2) return true;
         if (this.step === 3) return this.ziele.length > 0;
         return true;
       },
 
       get gesamtDauer() {
-        // Parse hours from dauer strings and sum
-        const total = this.lernpfad.reduce((sum, m) => {
+        const all = this.lernpfade.flatMap(p => p.modules);
+        const total = all.reduce((sum, m) => {
           const match = m.dauer.match(/[\d,]+/);
           if (!match) return sum;
           return sum + parseFloat(match[0].replace(',', '.'));
@@ -738,21 +1036,54 @@
       },
 
       get begründung() {
-        const rolleText  = this.rolle      || 'Ihre Rolle';
-        const branche    = this.branche    || 'Ihre Branche';
+        const rollenText = this.selectedRollen.map(sr => sr.name).join(' und ');
+        const branche    = this.branche || 'Ihre Branche';
         const levelText  = this.levelLabels[this.level];
         const zielTexts  = this.ziele
           .map(z => this.zielOptionen.find(o => o.id === z)?.label)
           .filter(Boolean);
-
         const zielSatz = zielTexts.length > 0
           ? `Der Fokus liegt auf: ${zielTexts.join(', ')}.`
           : '';
+        const totalMod = this.lernpfade.reduce((s, p) => s + p.modules.length, 0);
+        return `Für ${rollenText || 'Ihre Teams'} im Bereich ${branche} auf ${levelText}-Niveau haben wir ${totalMod} Module in ${this.lernpfade.length} individuellen Lernpfaden zusammengestellt. Die Module sind nach Schwierigkeit sortiert, sodass sie schrittweise aufeinander aufbauen. ${zielSatz}`;
+      },
 
-        return `Für ${rolleText} im Bereich ${branche} auf ${levelText}-Niveau haben wir ${this.lernpfad.length} optimal abgestimmte Module zusammengestellt. Die Module sind nach Schwierigkeit sortiert, sodass Sie schrittweise aufeinander aufbauen. ${zielSatz}`;
+      // ═══ NEU: Pricing-Computed ═══
+      get totalMitarbeitende() {
+        return this.selectedRollen.reduce((sum, sr) => sum + (parseInt(sr.count) || 0), 0);
+      },
+
+      get monatlicheInvestition() {
+        const price = this.pricingPlan === 'basis' ? 29 : 49;
+        return this.totalMitarbeitende * price;
+      },
+
+      get totalModule() {
+        return this.lernpfade.reduce((sum, p) => sum + p.modules.length, 0);
+      },
+
+      // ═══ NEU: Compliance-Computed ═══
+      get employeesWithRoles() {
+        const roles     = this.selectedRollen.length > 0 ? this.selectedRollen : [{ name: 'Allgemein' }];
+        const pfadNames = this.lernpfade.length > 0
+          ? this.lernpfade.map(p => p.modules[0]?.name || 'KI-Grundlagen')
+          : ['KI-Grundlagen'];
+        return this.employeeBaseData.map((e, i) => ({
+          ...e,
+          abteilung: roles[i % roles.length].name,
+          pfadName:  pfadNames[i % pfadNames.length],
+        }));
+      },
+
+      get literacyQuote() {
+        if (!this.employeesWithRoles.length) return 0;
+        const cert = this.employeesWithRoles.filter(e => e.status === 'certified').length;
+        return Math.round((cert / this.employeesWithRoles.length) * 100);
       },
 
       // ─── Methods ────────────────────────────────────────
+
       weiter() {
         if (this.step < this.totalSteps) {
           this.step++;
@@ -776,52 +1107,83 @@
         else            this.ziele.splice(idx, 1);
       },
 
-      scoreModule(modul) {
+      // ═══ NEU: Multi-Rollen-Methoden ═══
+      toggleRolle(r) {
+        const idx = this.selectedRollen.findIndex(sr => sr.name === r);
+        if (idx === -1) this.selectedRollen.push({ name: r, count: 10 });
+        else            this.selectedRollen.splice(idx, 1);
+      },
+
+      isRolleSelected(r) {
+        return this.selectedRollen.some(sr => sr.name === r);
+      },
+
+      getRolleCount(r) {
+        return this.selectedRollen.find(sr => sr.name === r)?.count ?? 10;
+      },
+
+      updateRolleCount(r, val) {
+        const sr = this.selectedRollen.find(sr => sr.name === r);
+        if (sr) sr.count = Math.max(1, parseInt(val) || 1);
+      },
+
+      // ═══ NEU: Scoring pro Rolle (vorher this.rolle hard-coded) ═══
+      scoreModuleForRolle(modul, rolle) {
         let score = 0;
-        const rolle = this.rolle.toLowerCase();
-
-        // Rolle-Match
-        if (modul.tags.rollen.includes(rolle)) score += 3;
-
-        // Level-Nähe
+        const rolleNorm = rolle.toLowerCase();
+        if (modul.tags.rollen.includes(rolleNorm)) score += 3;
         const diff = Math.abs(modul.levelIdx - this.level);
         if (diff === 0)      score += 3;
         else if (diff === 1) score += 1;
-
-        // Ziel-Matches
         this.ziele.forEach(z => {
           if (modul.tags.ziele.includes(z)) score += 2;
         });
-
         return score;
       },
 
+      // ═══ NEU: Pfad-Generierung für jede ausgewählte Rolle ═══
       generatePfad() {
-        const scored = this.modules.map(m => ({
-          ...m,
-          score: this.scoreModule(m)
-        }));
+        this.lernpfade = this.selectedRollen.map(sr => {
+          const scored = this.modules.map(m => ({
+            ...m,
+            score: this.scoreModuleForRolle(m, sr.name)
+          }));
+          return {
+            rolle: sr.name,
+            count: sr.count,
+            modules: scored
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 5)
+              .sort((a, b) => a.levelIdx - b.levelIdx)
+          };
+        });
+      },
 
-        // Top 5 by score, then sorted by levelIdx for a logical progression
-        this.lernpfad = scored
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 5)
-          .sort((a, b) => a.levelIdx - b.levelIdx);
+      // ═══ NEU: Dauer-Hilfsfunktion pro Pfad ═══
+      pfadDauer(modules) {
+        const total = modules.reduce((sum, m) => {
+          const match = m.dauer.match(/[\d,]+/);
+          if (!match) return sum;
+          return sum + parseFloat(match[0].replace(',', '.'));
+        }, 0);
+        return total % 1 === 0 ? `${total} Std.` : `${total.toFixed(1)} Std.`;
       },
 
       openModul(modul)  { this.selectedModul = modul; },
       closeModul()      { this.selectedModul = null;  },
 
       neuerPlan() {
-        this.screen      = 'wizard';
-        this.step        = 1;
-        this.branche     = '';
-        this.rolle       = '';
-        this.level       = 0;
-        this.ziele       = [];
-        this.freitext    = '';
-        this.lernpfad    = [];
-        this.selectedModul = null;
+        this.screen         = 'wizard';
+        this.step           = 1;
+        this.branche        = '';
+        this.selectedRollen = [];
+        this.level          = 1;
+        this.ziele          = [];
+        this.freitext       = '';
+        this.lernpfade      = [];
+        this.selectedModul  = null;
+        this.pricingPlan    = 'basis';
+        this.complianceFilter = 'alle';
       },
     };
   }
