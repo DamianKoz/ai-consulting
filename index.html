@@ -1040,8 +1040,8 @@
       get employeesWithRoles() {
         const roles     = this.selectedRollen.length > 0 ? this.selectedRollen : [{ name: 'Allgemein' }];
         const pfadNames = this.lernpfade.length > 0
-          ? this.lernpfade.map(p => p.modules[0]?.name || 'KI-Grundlagen')
-          : ['KI-Grundlagen'];
+          ? this.lernpfade.map(p => p.rolle + '-Lernpfad')
+          : ['Allgemein-Lernpfad'];
         const all = this.employeeBaseData.map((e, i) => ({
           ...e,
           abteilung: roles[i % roles.length].name,
