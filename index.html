@@ -1042,17 +1042,18 @@
         const pfadNames = this.lernpfade.length > 0
           ? this.lernpfade.map(p => p.modules[0]?.name || 'KI-Grundlagen')
           : ['KI-Grundlagen'];
-        return this.employeeBaseData.map((e, i) => ({
+        const all = this.employeeBaseData.map((e, i) => ({
           ...e,
           abteilung: roles[i % roles.length].name,
           pfadName:  pfadNames[i % pfadNames.length],
         }));
+        if (this.complianceFilter === 'alle') return all;
+        return all.filter(e => e.status === this.complianceFilter);
       },
 
       get literacyQuote() {
-        if (!this.employeesWithRoles.length) return 0;
-        const cert = this.employeesWithRoles.filter(e => e.status === 'certified').length;
-        return Math.round((cert / this.employeesWithRoles.length) * 100);
+        const cert = this.employeeBaseData.filter(e => e.status === 'certified').length;
+        return Math.round((cert / this.employeeBaseData.length) * 100);
       },
 
       // ─── Methods ────────────────────────────────────────
