@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SkillPath AI – Modulare KI-Schulungen für Unternehmen</title>
+  <title>ModuLearn – Modulare IT- und KI-Schulungen</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
   <style>
@@ -70,7 +70,7 @@
   </style>
 </head>
 
-<body class="bg-slate-50 antialiased font-sans" x-data="skillpath()" x-cloak>
+<body class="bg-slate-50 antialiased font-sans" x-data="modulearn()" x-cloak>
 
   <!-- ═══════════════════════════════════════════════════════
        SCREEN: LANDING
@@ -80,24 +80,24 @@
     <nav class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-8 py-5">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 gradient-card rounded-lg flex items-center justify-center">
-          <span class="text-white text-sm font-bold">S</span>
+          <span class="text-white text-sm font-bold">M</span>
         </div>
-        <span class="text-white font-bold text-lg tracking-tight">SkillPath AI</span>
+        <span class="text-white font-bold text-lg tracking-tight">ModuLearn</span>
       </div>
-      <span class="text-indigo-200 text-sm hidden md:block">KI-Schulungen. Modular. Flexibel. Unternehmensspezifisch.</span>
+      <span class="text-indigo-200 text-sm hidden md:block">IT- und KI-Schulungen. Modular. Flexibel. Praxisorientiert.</span>
     </nav>
 
     <div class="gradient-hero min-h-screen flex flex-col items-center justify-center text-center px-6 py-24">
       <div class="max-w-3xl mx-auto">
         <span class="inline-block bg-indigo-500 bg-opacity-30 text-indigo-100 text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full mb-6">
-          AI Training as a Service
+          Modulare IT- &amp; KI-Schulungen
         </span>
         <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6">
           KI verstehen –<br class="hidden md:block"/> statt blind vertrauen.
         </h1>
         <p class="text-indigo-200 text-lg md:text-xl mb-10 max-w-xl mx-auto leading-relaxed">
           Wir erstellen den passenden KI-Lernpfad für Ihr Unternehmen –
-          abgestimmt auf Branche, Rolle und Wissenstand Ihrer Mitarbeitenden.
+          bedarfsgerecht, flexibel und abgestimmt auf Ihr Unternehmen.
         </p>
         <button
           @click="screen = 'wizard'"
@@ -141,11 +141,10 @@
           </button>
           <div class="flex items-center gap-2">
             <div class="w-6 h-6 gradient-card rounded flex items-center justify-center">
-              <span class="text-white text-xs font-bold">S</span>
+              <span class="text-white text-xs font-bold">M</span>
             </div>
-            <span class="text-white font-semibold text-sm">SkillPath AI</span>
+            <span class="text-white font-semibold text-sm">ModuLearn</span>
           </div>
-          <!-- ═══ FIX 1: totalSteps jetzt 2 ═══ -->
           <span class="text-indigo-200 text-sm">Schritt <span x-text="step"></span> / <span x-text="totalSteps"></span></span>
         </div>
 
@@ -174,7 +173,7 @@
     <div class="flex-1 px-6 -mt-6 pb-12">
       <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
 
-        <!-- ═══ FIX 1: STEP 1 – Branche + Rollen (jetzt mit Level pro Rolle) ═══ -->
+        <!-- STEP 1 – Branche + Rollen -->
         <div x-show="step === 1" class="fade-in space-y-6">
 
           <div>
@@ -227,7 +226,6 @@
                       >
                     </div>
 
-                    <!-- ═══ FIX 1: Level-Pills pro Rolle ═══ -->
                     <div>
                       <label class="block text-xs text-indigo-500 font-medium mb-1.5">KI-Niveau</label>
                       <div class="flex gap-1.5">
@@ -252,9 +250,8 @@
             </div>
           </div>
         </div>
-        <!-- ═══ Ende FIX 1: Step 1 ═══ -->
 
-        <!-- ═══ FIX 1: STEP 2 – Ziele (vormals Step 3, globaler Level-Schritt entfernt) ═══ -->
+        <!-- STEP 2 – Ziele -->
         <div x-show="step === 2" class="fade-in space-y-4">
           <label class="block text-sm font-semibold text-slate-700 mb-2">
             Was möchten Sie mit der Schulung erreichen?
@@ -320,9 +317,9 @@
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-2">
             <div class="w-7 h-7 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-              <span class="text-white text-xs font-bold">S</span>
+              <span class="text-white text-xs font-bold">M</span>
             </div>
-            <span class="text-white font-semibold">SkillPath AI</span>
+            <span class="text-white font-semibold">ModuLearn</span>
           </div>
           <div class="flex gap-3 no-print">
             <button @click="neuerPlan()" class="text-indigo-200 hover:text-white text-sm transition-colors">
@@ -334,14 +331,13 @@
           </div>
         </div>
 
-        <div class="text-indigo-300 text-sm uppercase tracking-widest font-semibold mb-2">Ihr persönlicher Lernpfad</div>
+        <div class="text-indigo-300 text-sm uppercase tracking-widest font-semibold mb-2">Ihre persönlichen Lernmodule</div>
         <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-4">
           <span x-text="lernpfade.length + (lernpfade.length === 1 ? ' Lernpfad' : ' Lernpfade')"></span>
           · <span x-text="totalModule"></span> Module
           · <span x-text="gesamtDauer"></span>
         </h1>
 
-        <!-- ═══ FIX 1: Chips zeigen Level pro Rolle, kein globaler Level-Chip mehr ═══ -->
         <div class="flex flex-wrap gap-2 mt-4">
           <span class="bg-white bg-opacity-20 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1">
             🏢 <span x-text="branche"></span>
@@ -426,7 +422,7 @@
 
       <div class="mt-8 bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
         <h3 class="font-bold text-indigo-800 mb-2 flex items-center gap-2">
-          <span>💡</span> Warum dieser Lernpfad?
+          <span>💡</span> Warum diese Module?
         </h3>
         <p class="text-indigo-700 text-sm leading-relaxed" x-text="begründung"></p>
         <div x-show="freitext" class="mt-3 pt-3 border-t border-indigo-200">
@@ -437,8 +433,11 @@
 
       <!-- Pricing-Kachel -->
       <div class="mt-6 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="font-bold text-slate-800 text-base">Geschätzte Investition</h3>
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Ihre Investition</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Einmalzahlung – keine laufenden Kosten</p>
+          </div>
           <div class="inline-flex items-center bg-slate-100 rounded-xl p-1">
             <button
               @click="pricingPlan = 'basis'"
@@ -454,20 +453,29 @@
         </div>
 
         <div class="space-y-3 text-slate-700">
-          <template x-for="sr in selectedRollen" :key="sr.name">
+          <template x-for="pfad in lernpfade" :key="pfad.rolle">
             <div class="flex justify-between items-center text-sm text-slate-500">
-              <span x-text="sr.name + ': ' + sr.count + ' × ' + (pricingPlan === 'basis' ? '29' : '49') + ' €'"></span>
-              <span class="font-medium text-slate-600" x-text="(sr.count * (pricingPlan === 'basis' ? 29 : 49)).toLocaleString('de-DE') + ' €'"></span>
+              <span x-text="pricingPlan === 'basis'
+                ? pfad.rolle + ': ' + pfad.count + ' × ' + pfad.modules.length + ' Bausteine × 29 €'
+                : pfad.rolle + ': ' + pfad.count + ' Personen × 49 €'"></span>
+              <span class="font-medium text-slate-600"
+                x-text="pricingPlan === 'basis'
+                  ? (pfad.count * pfad.modules.length * 29).toLocaleString('de-DE') + ' €'
+                  : (pfad.count * 49).toLocaleString('de-DE') + ' €'"></span>
             </div>
           </template>
           <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline">
-            <span class="font-semibold text-slate-800">Monatlich</span>
-            <span class="font-extrabold text-indigo-600 text-2xl" x-text="monatlicheInvestition.toLocaleString('de-DE') + ' €'"></span>
+            <span class="font-semibold text-slate-800">Gesamt (Einmalzahlung)</span>
+            <span class="font-extrabold text-indigo-600 text-2xl" x-text="gesamtInvestition.toLocaleString('de-DE') + ' €'"></span>
           </div>
-          <div class="flex justify-between items-center text-slate-500">
-            <span class="text-sm">Jährlich (ARR)</span>
-            <span class="text-sm font-semibold text-slate-700" x-text="(monatlicheInvestition * 12).toLocaleString('de-DE') + ' €'"></span>
-          </div>
+        </div>
+
+        <div
+          x-show="pricingPlan === 'basis'"
+          class="mt-4 bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-slate-600 font-medium"
+        >
+          <span class="text-base">✅</span>
+          Basis enthält: Schulung &amp; Zertifikat – einmalig, keine laufenden Kosten
         </div>
 
         <div
@@ -475,7 +483,7 @@
           class="mt-4 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2.5 flex items-center gap-2 text-xs text-indigo-700 font-medium"
         >
           <span class="text-base">✅</span>
-          Pro-Plan inkl. Compliance-Reporting, AI-Act-Nachweis & dediziertem Erfolgs-Dashboard
+          Pro-Plan: Alles aus Basis + Compliance-Dashboard &amp; dedizierter Ongoing-Support
         </div>
       </div>
 
@@ -486,7 +494,6 @@
         >
           ← Neuen Plan erstellen
         </button>
-        <!-- ═══ FIX 2: Öffnet zuerst das Disclaimer-Modal ═══ -->
         <button
           @click="showComplianceModal = true"
           class="font-semibold px-6 py-3 rounded-xl text-sm transition-all duration-150"
@@ -519,9 +526,9 @@
           </button>
           <div class="flex items-center gap-2">
             <div class="w-7 h-7 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-              <span class="text-white text-xs font-bold">S</span>
+              <span class="text-white text-xs font-bold">M</span>
             </div>
-            <span class="text-white font-semibold">SkillPath AI</span>
+            <span class="text-white font-semibold">ModuLearn</span>
           </div>
           <button
             @click="alert('Demo: PDF-Export wird in der Vollversion erstellt.')"
@@ -535,7 +542,6 @@
         <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2">AI Act Compliance Dashboard</h1>
         <p class="text-indigo-200 text-sm">Echtzeit-Überblick über den AI-Literacy-Stand Ihrer Mitarbeitenden</p>
 
-        <!-- ═══ FIX 2: Demo-Modus-Chip ═══ -->
         <div class="mt-3">
           <span class="inline-flex items-center gap-1.5 bg-white bg-opacity-15 border border-white border-opacity-20 text-white text-xs font-medium px-3 py-1.5 rounded-full">
             🔐 Demo-Modus · ACME GmbH
@@ -727,7 +733,7 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
-       FIX 2: MODAL – Compliance Disclaimer
+       MODAL – Compliance Disclaimer
   ═══════════════════════════════════════════════════════ -->
   <div
     x-show="showComplianceModal"
@@ -741,7 +747,7 @@
         <div class="text-5xl mb-4">🔐</div>
         <h2 class="text-xl font-bold text-slate-800 mb-3">Pro-Plan: Compliance-Reporting</h2>
         <p class="text-slate-600 text-sm leading-relaxed">
-          Im Pro-Plan wird SkillPath via SSO mit Ihrem Unternehmen verknüpft.
+          Im Pro-Plan wird ModuLearn via SSO mit Ihrem Unternehmen verknüpft.
           So sehen Sie jederzeit den AI-Literacy-Status Ihrer Mitarbeitenden –
           AI-Act-konform und revisionssicher.
           <br><br>
@@ -764,42 +770,33 @@
       </div>
     </div>
   </div>
-  <!-- ═══ Ende FIX 2 ═══ -->
 
 
   <!-- ═══════════════════════════════════════════════════════
        ALPINE.JS APP LOGIC
   ═══════════════════════════════════════════════════════ -->
   <script>
-  function skillpath() {
+  function modulearn() {
     return {
       screen: 'landing',
       step: 1,
 
-      // ═══ FIX 1: 2 Schritte statt 3 ═══
       totalSteps: 2,
 
-      // ═══ FIX 1 + Demo-Defaults: Wizard vorausgefüllt für schnellen Pitch-Flow ═══
-      branche: 'Beratung & Dienstleistung',
-      selectedRollen: [
-        { name: 'Management', count: 12, level: 1 },
-        { name: 'Fachbereich', count: 40, level: 0 },
-      ],
-      // globales `level` entfernt – Level liegt jetzt pro Rolle in selectedRollen
-      ziele: ['effizienz', 'compliance'],
+      branche: '',
+      selectedRollen: [],
+      ziele: [],
       freitext: '',
 
       // Results
       lernpfade: [],
       selectedModul: null,
 
-      // ═══ FIX 2: Modal-State ═══
       showComplianceModal: false,
 
       pricingPlan: 'basis',
       complianceFilter: 'alle',
 
-      // ═══ FIX 1: 2 Schritte ═══
       stepTitles: [
         'Ihr Unternehmen',
         'Ihre Ziele',
@@ -1007,7 +1004,6 @@
         return total % 1 === 0 ? `${total} Stunden` : `${total.toFixed(1)} Stunden`;
       },
 
-      // ═══ FIX 1: kein globales Level mehr in der Begründung ═══
       get begründung() {
         const branche   = this.branche || 'Ihre Branche';
         const zielTexts = this.ziele
@@ -1021,16 +1017,19 @@
         const rollenDesc = this.selectedRollen
           .map(sr => `${sr.name} (${this.levelLabels[sr.level]})`)
           .join(' und ');
-        return `Für Ihre ${teamCount} Teams im Bereich ${branche} – ${rollenDesc} – haben wir jeweils einen individuell abgestimmten Lernpfad erstellt. Insgesamt ${totalMod} Module, sortiert nach Schwierigkeit. ${zielSatz}`;
+        return `Für Ihre ${teamCount} Teams im Bereich ${branche} – ${rollenDesc} – haben wir jeweils individuell abgestimmte Lernbausteine zusammengestellt. Insgesamt ${totalMod} Module, sortiert nach Schwierigkeit. ${zielSatz}`;
       },
 
       get totalMitarbeitende() {
         return this.selectedRollen.reduce((sum, sr) => sum + (parseInt(sr.count) || 0), 0);
       },
 
-      get monatlicheInvestition() {
-        const price = this.pricingPlan === 'basis' ? 29 : 49;
-        return this.totalMitarbeitende * price;
+      get gesamtInvestition() {
+        if (this.pricingPlan === 'basis') {
+          return this.lernpfade.reduce((sum, pfad) => sum + pfad.count * pfad.modules.length * 29, 0);
+        } else {
+          return this.lernpfade.reduce((sum, pfad) => sum + pfad.count * 49, 0);
+        }
       },
 
       get totalModule() {
@@ -1083,7 +1082,6 @@
 
       toggleRolle(r) {
         const idx = this.selectedRollen.findIndex(sr => sr.name === r);
-        // ═══ FIX 1: level=1 (Grundkenntnisse) als Default ═══
         if (idx === -1) this.selectedRollen.push({ name: r, count: 10, level: 1 });
         else            this.selectedRollen.splice(idx, 1);
       },
@@ -1101,7 +1099,6 @@
         if (sr) sr.count = Math.max(1, parseInt(val) || 1);
       },
 
-      // ═══ FIX 1: Level pro Rolle lesen/setzen ═══
       getRolleLevel(r) {
         return this.selectedRollen.find(sr => sr.name === r)?.level ?? 1;
       },
@@ -1111,7 +1108,6 @@
         if (sr) sr.level = lIdx;
       },
 
-      // ═══ FIX 1: Scoring nutzt sr.level statt globalem this.level ═══
       scoreModuleForRolle(modul, sr) {
         let score = 0;
         const rolleNorm = sr.name.toLowerCase();
@@ -1155,21 +1151,17 @@
       openModul(modul)  { this.selectedModul = modul; },
       closeModul()      { this.selectedModul = null;  },
 
-      // ═══ FIX 1 + FIX 2: Reset mit Demo-Defaults + neuem State ═══
       neuerPlan() {
-        this.screen             = 'wizard';
-        this.step               = 1;
-        this.branche            = 'Beratung & Dienstleistung';
-        this.selectedRollen     = [
-          { name: 'Management', count: 12, level: 1 },
-          { name: 'Fachbereich', count: 40, level: 0 },
-        ];
-        this.ziele              = ['effizienz', 'compliance'];
-        this.freitext           = '';
-        this.lernpfade          = [];
-        this.selectedModul      = null;
-        this.pricingPlan        = 'basis';
-        this.complianceFilter   = 'alle';
+        this.screen              = 'wizard';
+        this.step                = 1;
+        this.branche             = '';
+        this.selectedRollen      = [];
+        this.ziele               = [];
+        this.freitext            = '';
+        this.lernpfade           = [];
+        this.selectedModul       = null;
+        this.pricingPlan         = 'basis';
+        this.complianceFilter    = 'alle';
         this.showComplianceModal = false;
       },
     };
